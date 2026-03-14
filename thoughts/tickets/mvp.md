@@ -1,6 +1,6 @@
 # moni MVP — Personal Finance CLI
 
-**Ref:** [MVP Research](/Users/noob/My Drive/brain/brain/Plans/moni/MVP Research.md)
+**Ref:** MVP Research (internal)
 
 ## Goal
 
