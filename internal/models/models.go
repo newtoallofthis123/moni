@@ -93,6 +93,12 @@ type PersonTransaction struct {
 	LinkNote     string    `json:"link_note,omitempty"`
 }
 
+// CategorySpend represents spending in a single category (for summary).
+type CategorySpend struct {
+	Category string  `json:"category"`
+	Amount   float64 `json:"amount"`
+}
+
 // PersonHistory aggregates a person's transactions and debts.
 type PersonHistory struct {
 	Transactions []PersonTransaction `json:"transactions"`
