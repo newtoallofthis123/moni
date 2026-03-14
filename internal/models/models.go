@@ -80,3 +80,21 @@ type TransactionPerson struct {
 
 	PersonName string `json:"person_name,omitempty"`
 }
+
+// PersonTransaction is a transaction linked to a person (for person history).
+type PersonTransaction struct {
+	ID           int64     `json:"id"`
+	Type         string    `json:"type"`
+	Amount       float64   `json:"amount"`
+	Note         string    `json:"note,omitempty"`
+	Date         time.Time `json:"date"`
+	CategoryName string    `json:"category_name,omitempty"`
+	AccountName  string    `json:"account_name,omitempty"`
+	LinkNote     string    `json:"link_note,omitempty"`
+}
+
+// PersonHistory aggregates a person's transactions and debts.
+type PersonHistory struct {
+	Transactions []PersonTransaction `json:"transactions"`
+	Debts        []Debt              `json:"debts"`
+}
