@@ -31,7 +31,7 @@ var balanceCmd = &cobra.Command{
 		}
 
 		if len(accounts) == 0 {
-			fmt.Println("No accounts yet. Add one with: moni account add <name> --type <type>")
+			format.Empty(outputFormat, "No accounts yet. Add one with: moni account add <name> --type <type>")
 			return nil
 		}
 
@@ -51,6 +51,9 @@ var balanceCmd = &cobra.Command{
 		}
 		rows[len(accounts)] = []string{"TOTAL", "", fmt.Sprintf("%.2f", total)}
 
+		if interactive {
+			return format.OutputInteractive(headers, rows)
+		}
 		return format.Output(outputFormat, headers, rows, summary)
 	},
 }

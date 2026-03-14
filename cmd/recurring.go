@@ -77,7 +77,7 @@ var recurringListCmd = &cobra.Command{
 		}
 
 		if len(items) == 0 {
-			fmt.Println("No active recurring items.")
+			format.Empty(outputFormat, "No active recurring items.")
 			return nil
 		}
 
@@ -95,6 +95,9 @@ var recurringListCmd = &cobra.Command{
 			}
 		}
 
+		if interactive {
+			return format.OutputInteractive(headers, rows)
+		}
 		return format.Output(outputFormat, headers, rows, items)
 	},
 }

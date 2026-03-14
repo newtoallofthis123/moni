@@ -43,7 +43,7 @@ var personListCmd = &cobra.Command{
 		}
 
 		if len(persons) == 0 {
-			fmt.Println("No persons yet. Add one with: moni person add <name>")
+			format.Empty(outputFormat, "No persons yet. Add one with: moni person add <name>")
 			return nil
 		}
 
@@ -57,6 +57,9 @@ var personListCmd = &cobra.Command{
 			}
 		}
 
+		if interactive {
+			return format.OutputInteractive(headers, rows)
+		}
 		return format.Output(outputFormat, headers, rows, persons)
 	},
 }
@@ -84,7 +87,7 @@ var personHistoryCmd = &cobra.Command{
 
 		// Text/table: show transactions then debts
 		if len(history.Transactions) > 0 {
-			fmt.Println("Transactions:")
+			format.Label(outputFormat, "Transactions:")
 			headers := []string{"ID", "Date", "Type", "Amount", "Category", "Account", "Note"}
 			rows := make([][]string, len(history.Transactions))
 			for i, t := range history.Transactions {
@@ -102,13 +105,13 @@ var personHistoryCmd = &cobra.Command{
 				return err
 			}
 		} else {
-			fmt.Println("No linked transactions.")
+			format.Empty(outputFormat, "No linked transactions.")
 		}
 
 		fmt.Println()
 
 		if len(history.Debts) > 0 {
-			fmt.Println("Debts:")
+			format.Label(outputFormat, "Debts:")
 			headers := []string{"ID", "Amount", "Direction", "Settled", "Note"}
 			rows := make([][]string, len(history.Debts))
 			for i, d := range history.Debts {
@@ -128,7 +131,7 @@ var personHistoryCmd = &cobra.Command{
 				return err
 			}
 		} else {
-			fmt.Println("No debts.")
+			format.Empty(outputFormat, "No debts.")
 		}
 
 		return nil

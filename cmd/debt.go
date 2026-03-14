@@ -92,7 +92,7 @@ var debtListCmd = &cobra.Command{
 		}
 
 		if len(debts) == 0 {
-			fmt.Println("No open debts.")
+			format.Empty(outputFormat, "No open debts.")
 			return nil
 		}
 
@@ -108,6 +108,9 @@ var debtListCmd = &cobra.Command{
 			}
 		}
 
+		if interactive {
+			return format.OutputInteractive(headers, rows)
+		}
 		return format.Output(outputFormat, headers, rows, debts)
 	},
 }

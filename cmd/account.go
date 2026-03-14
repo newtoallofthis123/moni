@@ -43,7 +43,7 @@ var accountListCmd = &cobra.Command{
 		}
 
 		if len(accounts) == 0 {
-			fmt.Println("No accounts yet. Add one with: moni account add <name> --type <type>")
+			format.Empty(outputFormat, "No accounts yet. Add one with: moni account add <name> --type <type>")
 			return nil
 		}
 
@@ -58,6 +58,9 @@ var accountListCmd = &cobra.Command{
 			}
 		}
 
+		if interactive {
+			return format.OutputInteractive(headers, rows)
+		}
 		return format.Output(outputFormat, headers, rows, accounts)
 	},
 }

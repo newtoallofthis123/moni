@@ -44,13 +44,15 @@ var summaryCmd = &cobra.Command{
 			return format.Output(outputFormat, nil, nil, s)
 		}
 
-		fmt.Printf("Summary for %s\n\n", s.Month)
+		format.Label(outputFormat, fmt.Sprintf("Summary for %s", s.Month))
+		fmt.Println()
 		if err := format.Output(outputFormat, headers, rows, s); err != nil {
 			return err
 		}
 
 		if len(s.TopCategories) > 0 {
-			fmt.Println("\nTop Expense Categories:")
+			fmt.Println()
+			format.Label(outputFormat, "Top Expense Categories:")
 			catHeaders := []string{"Category", "Amount"}
 			catRows := make([][]string, len(s.TopCategories))
 			for i, c := range s.TopCategories {

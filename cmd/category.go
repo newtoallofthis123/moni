@@ -43,7 +43,7 @@ var categoryListCmd = &cobra.Command{
 		}
 
 		if len(categories) == 0 {
-			fmt.Println("No categories yet. Add one with: moni category add <name>")
+			format.Empty(outputFormat, "No categories yet. Add one with: moni category add <name>")
 			return nil
 		}
 
@@ -57,6 +57,9 @@ var categoryListCmd = &cobra.Command{
 			}
 		}
 
+		if interactive {
+			return format.OutputInteractive(headers, rows)
+		}
 		return format.Output(outputFormat, headers, rows, categories)
 	},
 }

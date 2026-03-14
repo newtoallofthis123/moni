@@ -11,6 +11,7 @@ import (
 
 var (
 	outputFormat string
+	interactive  bool
 	conn         *sql.DB
 )
 
@@ -19,6 +20,11 @@ var rootCmd = &cobra.Command{
 	Short: "Personal finance CLI",
 	Long:  "moni — a local-first personal finance tracker backed by SQLite.",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if interactive && outputFormat != "table" {
+			fmt.Fprintln(os.Stderr, "warning: --interactive overrides --output; using interactive table view")
+			outputFormat = "table"
+		}
+
 		// Skip DB connection for init command (it handles its own)
 		if cmd.Name() == "init" {
 			return nil
@@ -46,4 +52,5 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format: text, table, json")
+	rootCmd.PersistentFlags().BoolVarP(&interactive, "interactive", "i", false, "Interactive table view (scrollable)")
 }

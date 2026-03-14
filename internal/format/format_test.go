@@ -51,12 +51,11 @@ func TestOutputTable(t *testing.T) {
 	}
 
 	out := buf.String()
-	lines := strings.Split(strings.TrimSpace(out), "\n")
-	if len(lines) != 4 { // header + separator + 2 rows
-		t.Errorf("expected 4 lines, got %d: %s", len(lines), out)
-	}
-	if !strings.Contains(lines[0], "ID") || !strings.Contains(lines[0], "Name") {
-		t.Errorf("expected headers in first line: %s", lines[0])
+	// lipgloss/table renders bordered tables — check content presence
+	for _, want := range []string{"ID", "Name", "alice", "bob", "1", "2"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("expected %q in table output:\n%s", want, out)
+		}
 	}
 }
 

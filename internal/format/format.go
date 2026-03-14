@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
-	"text/tabwriter"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
+	"github.com/mattn/go-isatty"
 )
 
 // Output writes data in the requested format to stdout.
@@ -45,21 +47,37 @@ func outputText(w io.Writer, headers []string, rows [][]string) error {
 }
 
 func outputTable(w io.Writer, headers []string, rows [][]string) error {
-	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	t := table.New().
+		Border(lipgloss.RoundedBorder()).
+		BorderStyle(BorderStyle).
+		BorderRow(true).
+		Headers(headers...).
+		Rows(rows...).
+		StyleFunc(func(row, col int) lipgloss.Style {
+			s := lipgloss.NewStyle().PaddingRight(1).PaddingLeft(1)
+			if row == table.HeaderRow {
+				return HeaderStyle.PaddingRight(1).PaddingLeft(1)
+			}
+			if row%2 == 0 {
+				return s
+			}
+			return s.Foreground(lipgloss.Color("245"))
+		})
 
-	fmt.Fprintln(tw, strings.Join(headers, "\t"))
-	// separator
-	seps := make([]string, len(headers))
-	for i, h := range headers {
-		seps[i] = strings.Repeat("-", len(h))
+	fmt.Fprintln(w, t.Render())
+	return nil
+}
+
+// OutputInteractive launches a bubbletea TUI with the given data.
+// Falls back to outputTable if stdout is not a TTY.
+func OutputInteractive(headers []string, rows [][]string) error {
+	if !isTerminal() {
+		return outputTable(os.Stdout, headers, rows)
 	}
-	fmt.Fprintln(tw, strings.Join(seps, "\t"))
-
-	for _, row := range rows {
-		fmt.Fprintln(tw, strings.Join(row, "\t"))
-	}
-
-	return tw.Flush()
+	m := newInteractiveModel(headers, rows)
+	p := tea.NewProgram(m, tea.WithAltScreen())
+	_, err := p.Run()
+	return err
 }
 
 // Message prints a simple message (for write commands that don't need formatted output).
@@ -67,6 +85,27 @@ func Message(format string, msg string, data any) error {
 	if format == "json" {
 		return outputJSON(os.Stdout, data)
 	}
-	fmt.Println(msg)
+	fmt.Println(SuccessStyle.Render(msg))
 	return nil
 }
+
+// Label prints a styled section header (e.g. "Summary for March").
+func Label(format string, msg string) {
+	if format == "json" {
+		return
+	}
+	fmt.Println(LabelStyle.Render(msg))
+}
+
+// Empty prints a styled empty-state hint (e.g. "No accounts yet...").
+func Empty(format string, msg string) {
+	if format == "json" {
+		return
+	}
+	fmt.Println(EmptyStyle.Render(msg))
+}
+
+func isTerminal() bool {
+	return isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
+}
+

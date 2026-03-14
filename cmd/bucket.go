@@ -84,6 +84,9 @@ var bucketStatusCmd = &cobra.Command{
 				fmt.Sprintf("%.2f", b.Target),
 				fmt.Sprintf("%.0f%%", pct),
 			}}
+			if interactive {
+				return format.OutputInteractive(headers, rows)
+			}
 			return format.Output(outputFormat, headers, rows, b)
 		}
 
@@ -92,7 +95,7 @@ var bucketStatusCmd = &cobra.Command{
 			return err
 		}
 		if len(buckets) == 0 {
-			fmt.Println("No buckets.")
+			format.Empty(outputFormat, "No buckets.")
 			return nil
 		}
 
@@ -106,6 +109,9 @@ var bucketStatusCmd = &cobra.Command{
 				fmt.Sprintf("%.2f", b.Target),
 				fmt.Sprintf("%.0f%%", pct),
 			}
+		}
+		if interactive {
+			return format.OutputInteractive(headers, rows)
 		}
 		return format.Output(outputFormat, headers, rows, buckets)
 	},

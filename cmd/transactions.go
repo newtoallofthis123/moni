@@ -28,7 +28,7 @@ var transactionsCmd = &cobra.Command{
 		}
 
 		if len(txns) == 0 {
-			fmt.Println("No transactions found.")
+			format.Empty(outputFormat, "No transactions found.")
 			return nil
 		}
 
@@ -46,6 +46,9 @@ var transactionsCmd = &cobra.Command{
 			}
 		}
 
+		if interactive {
+			return format.OutputInteractive(headers, rows)
+		}
 		return format.Output(outputFormat, headers, rows, txns)
 	},
 }
