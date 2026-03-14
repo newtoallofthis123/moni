@@ -95,6 +95,19 @@ func DebtSettle(conn *sql.DB, personID int64, amount float64) (float64, error) {
 	return settled, nil
 }
 
+// DebtDelete deletes a debt by ID.
+func DebtDelete(conn *sql.DB, id int64) error {
+	res, err := conn.Exec(`DELETE FROM debts WHERE id = ?`, id)
+	if err != nil {
+		return fmt.Errorf("delete debt: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return fmt.Errorf("debt %d not found", id)
+	}
+	return nil
+}
+
 // DebtListOpen returns all unsettled debts with person names.
 func DebtListOpen(conn *sql.DB) ([]models.Debt, error) {
 	rows, err := conn.Query(

@@ -45,6 +45,60 @@ func TransactionInsert(conn *sql.DB, accountID int64, categoryID *int64, txnType
 	return txn, nil
 }
 
+// TransactionGetByID returns a single transaction by ID.
+func TransactionGetByID(conn *sql.DB, id int64) (models.Transaction, error) {
+	var t models.Transaction
+	err := conn.QueryRow(
+		`SELECT t.id, t.account_id, t.category_id, t.type, t.amount, t.note, t.date, t.created_at,
+		        a.name, COALESCE(c.name, '')
+		 FROM transactions t
+		 JOIN accounts a ON a.id = t.account_id
+		 LEFT JOIN categories c ON c.id = t.category_id
+		 WHERE t.id = ?`, id,
+	).Scan(&t.ID, &t.AccountID, &t.CategoryID, &t.Type, &t.Amount, &t.Note, &t.Date, &t.CreatedAt, &t.AccountName, &t.CategoryName)
+	if err != nil {
+		return t, fmt.Errorf("transaction %d not found: %w", id, err)
+	}
+	return t, nil
+}
+
+// TransactionDelete deletes a transaction and reverses the balance change atomically.
+func TransactionDelete(conn *sql.DB, id int64) (models.Transaction, error) {
+	txn, err := TransactionGetByID(conn, id)
+	if err != nil {
+		return txn, err
+	}
+
+	tx, err := conn.Begin()
+	if err != nil {
+		return txn, fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Reverse the balance change
+	delta := -txn.Amount
+	if txn.Type == "expense" {
+		delta = txn.Amount // expense decreased balance, so add it back
+	}
+	if err := AccountUpdateBalance(tx, txn.AccountID, delta); err != nil {
+		return txn, err
+	}
+
+	// Delete linked persons first (FK)
+	if _, err := tx.Exec(`DELETE FROM transaction_persons WHERE transaction_id = ?`, id); err != nil {
+		return txn, fmt.Errorf("delete transaction links: %w", err)
+	}
+
+	if _, err := tx.Exec(`DELETE FROM transactions WHERE id = ?`, id); err != nil {
+		return txn, fmt.Errorf("delete transaction: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return txn, fmt.Errorf("commit: %w", err)
+	}
+	return txn, nil
+}
+
 // TransactionList returns transactions with optional filters.
 // catName filters by category name (empty = no filter).
 // since filters by date (zero time = no filter).

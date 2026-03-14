@@ -63,6 +63,21 @@ func AccountGetFirst(db *sql.DB) (models.Account, error) {
 	return a, nil
 }
 
+// AccountEdit updates an account's name and type.
+func AccountEdit(db *sql.DB, id int64, name, acctType string) (models.Account, error) {
+	var a models.Account
+	err := db.QueryRow(
+		`UPDATE accounts SET name = ?, type = ?
+		 WHERE id = ?
+		 RETURNING id, name, type, balance, created_at`,
+		name, acctType, id,
+	).Scan(&a.ID, &a.Name, &a.Type, &a.Balance, &a.CreatedAt)
+	if err != nil {
+		return a, fmt.Errorf("edit account: %w", err)
+	}
+	return a, nil
+}
+
 // AccountUpdateBalance adjusts the balance of an account by delta (positive or negative).
 func AccountUpdateBalance(tx *sql.Tx, accountID int64, delta float64) error {
 	_, err := tx.Exec(`UPDATE accounts SET balance = balance + ? WHERE id = ?`, delta, accountID)

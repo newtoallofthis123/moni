@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/newtoallofthis123/moni/internal/db"
@@ -49,6 +50,28 @@ var transactionsCmd = &cobra.Command{
 	},
 }
 
+var transactionDeleteCmd = &cobra.Command{
+	Use:   "delete <id>",
+	Short: "Delete a transaction (reverses balance)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id, err := strconv.ParseInt(args[0], 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid transaction ID %q", args[0])
+		}
+
+		txn, err := db.TransactionDelete(conn, id)
+		if err != nil {
+			return err
+		}
+
+		return format.Message(outputFormat,
+			fmt.Sprintf("Transaction #%d deleted (%.2f %s reversed from %s).", txn.ID, txn.Amount, txn.Type, txn.AccountName),
+			txn,
+		)
+	},
+}
+
 func parseSince(s string) (time.Time, error) {
 	if s == "" {
 		return time.Time{}, nil
@@ -81,8 +104,15 @@ func parseSince(s string) (time.Time, error) {
 	}
 }
 
+var transactionCmd = &cobra.Command{
+	Use:   "transaction",
+	Short: "Manage transactions",
+}
+
 func init() {
 	rootCmd.AddCommand(transactionsCmd)
+	rootCmd.AddCommand(transactionCmd)
+	transactionCmd.AddCommand(transactionDeleteCmd)
 	transactionsCmd.Flags().StringP("cat", "c", "", "Filter by category name")
 	transactionsCmd.Flags().StringP("since", "s", "", "Filter by date: today, week, month, year, or YYYY-MM-DD")
 }

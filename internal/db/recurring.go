@@ -22,6 +22,19 @@ func RecurringInsert(db *sql.DB, description string, amount float64, categoryID 
 	return r, nil
 }
 
+// RecurringDeactivate sets a recurring item as inactive.
+func RecurringDeactivate(db *sql.DB, id int64) error {
+	res, err := db.Exec(`UPDATE recurring SET active = 0 WHERE id = ? AND active = 1`, id)
+	if err != nil {
+		return fmt.Errorf("deactivate recurring: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return fmt.Errorf("recurring item %d not found or already inactive", id)
+	}
+	return nil
+}
+
 // RecurringList returns all active recurring items with category names.
 func RecurringList(db *sql.DB) ([]models.Recurring, error) {
 	rows, err := db.Query(

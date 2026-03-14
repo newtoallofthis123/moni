@@ -20,6 +20,25 @@ func PersonInsert(db *sql.DB, name, phone string) (models.Person, error) {
 	return p, nil
 }
 
+// PersonList returns all persons.
+func PersonList(db *sql.DB) ([]models.Person, error) {
+	rows, err := db.Query(`SELECT id, name, phone, created_at FROM persons ORDER BY name`)
+	if err != nil {
+		return nil, fmt.Errorf("list persons: %w", err)
+	}
+	defer rows.Close()
+
+	var persons []models.Person
+	for rows.Next() {
+		var p models.Person
+		if err := rows.Scan(&p.ID, &p.Name, &p.Phone, &p.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan person: %w", err)
+		}
+		persons = append(persons, p)
+	}
+	return persons, rows.Err()
+}
+
 // PersonGetByName returns the person with the given name.
 func PersonGetByName(db *sql.DB, name string) (models.Person, error) {
 	var p models.Person

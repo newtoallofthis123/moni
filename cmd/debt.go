@@ -112,11 +112,36 @@ var debtListCmd = &cobra.Command{
 	},
 }
 
+var debtDeleteCmd = &cobra.Command{
+	Use:   "delete <id>",
+	Short: "Delete a debt",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id, err := strconv.ParseInt(args[0], 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid debt ID %q", args[0])
+		}
+
+		if err := db.DebtDelete(conn, id); err != nil {
+			return err
+		}
+
+		return format.Message(outputFormat,
+			fmt.Sprintf("Debt #%d deleted.", id),
+			struct {
+				ID     int64  `json:"id"`
+				Status string `json:"status"`
+			}{ID: id, Status: "deleted"},
+		)
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(debtCmd)
 	debtCmd.AddCommand(debtAddCmd)
 	debtCmd.AddCommand(debtSettleCmd)
 	debtCmd.AddCommand(debtListCmd)
+	debtCmd.AddCommand(debtDeleteCmd)
 
 	debtAddCmd.Flags().StringP("note", "n", "", "Note about this debt")
 }

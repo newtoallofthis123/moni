@@ -62,10 +62,46 @@ var accountListCmd = &cobra.Command{
 	},
 }
 
+var accountEditCmd = &cobra.Command{
+	Use:   "edit <name>",
+	Short: "Edit an account's name or type",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+		acct, err := db.AccountGetByName(conn, name)
+		if err != nil {
+			return err
+		}
+
+		newName := acct.Name
+		if cmd.Flags().Changed("name") {
+			newName, _ = cmd.Flags().GetString("name")
+		}
+		newType := acct.Type
+		if cmd.Flags().Changed("type") {
+			newType, _ = cmd.Flags().GetString("type")
+		}
+
+		updated, err := db.AccountEdit(conn, acct.ID, newName, newType)
+		if err != nil {
+			return err
+		}
+
+		return format.Message(outputFormat,
+			fmt.Sprintf("Account %q updated (type: %s).", updated.Name, updated.Type),
+			updated,
+		)
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(accountCmd)
 	accountCmd.AddCommand(accountAddCmd)
 	accountCmd.AddCommand(accountListCmd)
+	accountCmd.AddCommand(accountEditCmd)
 
 	accountAddCmd.Flags().StringP("type", "t", "bank", "Account type: bank, cash, credit, wallet, other")
+
+	accountEditCmd.Flags().StringP("name", "n", "", "New account name")
+	accountEditCmd.Flags().StringP("type", "t", "", "New account type")
 }

@@ -33,6 +33,34 @@ var personAddCmd = &cobra.Command{
 	},
 }
 
+var personListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all persons",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		persons, err := db.PersonList(conn)
+		if err != nil {
+			return err
+		}
+
+		if len(persons) == 0 {
+			fmt.Println("No persons yet. Add one with: moni person add <name>")
+			return nil
+		}
+
+		headers := []string{"ID", "Name", "Phone"}
+		rows := make([][]string, len(persons))
+		for i, p := range persons {
+			rows[i] = []string{
+				fmt.Sprintf("%d", p.ID),
+				p.Name,
+				p.Phone,
+			}
+		}
+
+		return format.Output(outputFormat, headers, rows, persons)
+	},
+}
+
 var personHistoryCmd = &cobra.Command{
 	Use:   "history <name>",
 	Short: "Show a person's transactions and debts",
@@ -110,6 +138,7 @@ var personHistoryCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(personCmd)
 	personCmd.AddCommand(personAddCmd)
+	personCmd.AddCommand(personListCmd)
 	personCmd.AddCommand(personHistoryCmd)
 
 	personAddCmd.Flags().StringP("phone", "p", "", "Phone number")

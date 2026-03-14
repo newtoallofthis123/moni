@@ -49,6 +49,34 @@ func BucketGetByName(db *sql.DB, name string) (models.Bucket, error) {
 	return b, nil
 }
 
+// BucketDelete deletes a bucket by ID.
+func BucketDelete(db *sql.DB, id int64) error {
+	res, err := db.Exec(`DELETE FROM buckets WHERE id = ?`, id)
+	if err != nil {
+		return fmt.Errorf("delete bucket: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return fmt.Errorf("bucket not found")
+	}
+	return nil
+}
+
+// BucketEdit updates a bucket's name and/or target.
+func BucketEdit(db *sql.DB, id int64, name string, target float64) (models.Bucket, error) {
+	var b models.Bucket
+	err := db.QueryRow(
+		`UPDATE buckets SET name = ?, target = ?
+		 WHERE id = ?
+		 RETURNING id, name, target, current, created_at`,
+		name, target, id,
+	).Scan(&b.ID, &b.Name, &b.Target, &b.Current, &b.CreatedAt)
+	if err != nil {
+		return b, fmt.Errorf("edit bucket: %w", err)
+	}
+	return b, nil
+}
+
 // BucketList returns all buckets.
 func BucketList(db *sql.DB) ([]models.Bucket, error) {
 	rows, err := db.Query(

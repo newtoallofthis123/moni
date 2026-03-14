@@ -111,12 +111,74 @@ var bucketStatusCmd = &cobra.Command{
 	},
 }
 
+var bucketDeleteCmd = &cobra.Command{
+	Use:   "delete <name>",
+	Short: "Delete a bucket",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+		bucket, err := db.BucketGetByName(conn, name)
+		if err != nil {
+			return err
+		}
+
+		if err := db.BucketDelete(conn, bucket.ID); err != nil {
+			return err
+		}
+
+		return format.Message(outputFormat,
+			fmt.Sprintf("Bucket %q deleted.", name),
+			bucket,
+		)
+	},
+}
+
+var bucketEditCmd = &cobra.Command{
+	Use:   "edit <name>",
+	Short: "Edit a bucket's target",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+		bucket, err := db.BucketGetByName(conn, name)
+		if err != nil {
+			return err
+		}
+
+		newName := name
+		if cmd.Flags().Changed("name") {
+			newName, _ = cmd.Flags().GetString("name")
+		}
+		target := bucket.Target
+		if cmd.Flags().Changed("target") {
+			target, _ = cmd.Flags().GetFloat64("target")
+			if target <= 0 {
+				return fmt.Errorf("--target must be a positive number")
+			}
+		}
+
+		b, err := db.BucketEdit(conn, bucket.ID, newName, target)
+		if err != nil {
+			return err
+		}
+
+		return format.Message(outputFormat,
+			fmt.Sprintf("Bucket %q updated (target: %.2f).", b.Name, b.Target),
+			b,
+		)
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(bucketCmd)
 	bucketCmd.AddCommand(bucketCreateCmd)
 	bucketCmd.AddCommand(bucketAddCmd)
 	bucketCmd.AddCommand(bucketStatusCmd)
+	bucketCmd.AddCommand(bucketDeleteCmd)
+	bucketCmd.AddCommand(bucketEditCmd)
 
 	bucketCreateCmd.Flags().Float64P("target", "t", 0, "Target amount for the bucket")
 	bucketCreateCmd.MarkFlagRequired("target")
+
+	bucketEditCmd.Flags().StringP("name", "n", "", "New bucket name")
+	bucketEditCmd.Flags().Float64P("target", "t", 0, "New target amount")
 }

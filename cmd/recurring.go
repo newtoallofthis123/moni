@@ -99,10 +99,35 @@ var recurringListCmd = &cobra.Command{
 	},
 }
 
+var recurringDeleteCmd = &cobra.Command{
+	Use:   "delete <id>",
+	Short: "Deactivate a recurring item",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id, err := strconv.ParseInt(args[0], 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid recurring ID %q", args[0])
+		}
+
+		if err := db.RecurringDeactivate(conn, id); err != nil {
+			return err
+		}
+
+		return format.Message(outputFormat,
+			fmt.Sprintf("Recurring item #%d deactivated.", id),
+			struct {
+				ID     int64  `json:"id"`
+				Status string `json:"status"`
+			}{ID: id, Status: "deactivated"},
+		)
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(recurringCmd)
 	recurringCmd.AddCommand(recurringAddCmd)
 	recurringCmd.AddCommand(recurringListCmd)
+	recurringCmd.AddCommand(recurringDeleteCmd)
 
 	recurringAddCmd.Flags().StringP("cat", "c", "", "Category name")
 	recurringAddCmd.Flags().StringP("every", "e", "", "Frequency: daily, weekly, monthly, yearly")
