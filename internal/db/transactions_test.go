@@ -13,7 +13,7 @@ func TestTransactionInsertUpdatesBalance(t *testing.T) {
 	catID := cat.ID
 
 	// Income increases balance
-	_, err := TransactionInsert(conn, acct.ID, &catID, "income", 1000, "paycheck")
+	_, err := TransactionInsert(conn, acct.ID, &catID, "income", 1000, "paycheck", time.Time{})
 	if err != nil {
 		t.Fatalf("insert income: %v", err)
 	}
@@ -25,7 +25,7 @@ func TestTransactionInsertUpdatesBalance(t *testing.T) {
 	// Expense decreases balance
 	food, _ := CategoryGetByName(conn, "food")
 	foodID := food.ID
-	_, err = TransactionInsert(conn, acct.ID, &foodID, "expense", 250, "groceries")
+	_, err = TransactionInsert(conn, acct.ID, &foodID, "expense", 250, "groceries", time.Time{})
 	if err != nil {
 		t.Fatalf("insert expense: %v", err)
 	}
@@ -43,8 +43,8 @@ func TestTransactionDelete(t *testing.T) {
 	catID := cat.ID
 
 	// Add income then expense
-	TransactionInsert(conn, acct.ID, &catID, "income", 500, "")
-	txn, _ := TransactionInsert(conn, acct.ID, &catID, "expense", 200, "lunch")
+	TransactionInsert(conn, acct.ID, &catID, "income", 500, "", time.Time{})
+	txn, _ := TransactionInsert(conn, acct.ID, &catID, "expense", 200, "lunch", time.Time{})
 
 	// Balance should be 300
 	a, _ := AccountGetByName(conn, "wallet")
@@ -78,9 +78,9 @@ func TestTransactionListFilters(t *testing.T) {
 	foodID := food.ID
 	salaryID := salary.ID
 
-	TransactionInsert(conn, acct.ID, &foodID, "expense", 50, "lunch")
-	TransactionInsert(conn, acct.ID, &salaryID, "income", 2000, "pay")
-	TransactionInsert(conn, acct.ID, &foodID, "expense", 30, "dinner")
+	TransactionInsert(conn, acct.ID, &foodID, "expense", 50, "lunch", time.Time{})
+	TransactionInsert(conn, acct.ID, &salaryID, "income", 2000, "pay", time.Time{})
+	TransactionInsert(conn, acct.ID, &foodID, "expense", 30, "dinner", time.Time{})
 
 	// No filter — all 3
 	all, _ := TransactionList(conn, "", time.Time{})
@@ -106,7 +106,7 @@ func TestTransactionExists(t *testing.T) {
 	conn := testDB(t)
 
 	acct, _ := AccountInsert(conn, "test", "bank")
-	txn, _ := TransactionInsert(conn, acct.ID, nil, "income", 100, "")
+	txn, _ := TransactionInsert(conn, acct.ID, nil, "income", 100, "", time.Time{})
 
 	exists, _ := TransactionExists(conn, txn.ID)
 	if !exists {

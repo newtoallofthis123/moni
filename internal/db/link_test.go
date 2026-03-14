@@ -2,6 +2,7 @@ package db
 
 import (
 	"testing"
+	"time"
 )
 
 func TestTransactionPersonLink(t *testing.T) {
@@ -9,7 +10,7 @@ func TestTransactionPersonLink(t *testing.T) {
 
 	acct, _ := AccountInsert(conn, "main", "bank")
 	p, _ := PersonInsert(conn, "alice", "")
-	txn, _ := TransactionInsert(conn, acct.ID, nil, "expense", 100, "dinner")
+	txn, _ := TransactionInsert(conn, acct.ID, nil, "expense", 100, "dinner", time.Time{})
 
 	tp, err := TransactionPersonLink(conn, txn.ID, p.ID, "split")
 	if err != nil {
@@ -31,7 +32,7 @@ func TestTransactionDeleteCleansLinks(t *testing.T) {
 
 	acct, _ := AccountInsert(conn, "main", "bank")
 	p, _ := PersonInsert(conn, "bob", "")
-	txn, _ := TransactionInsert(conn, acct.ID, nil, "expense", 50, "")
+	txn, _ := TransactionInsert(conn, acct.ID, nil, "expense", 50, "", time.Time{})
 	TransactionPersonLink(conn, txn.ID, p.ID, "")
 
 	// Delete should clean up links too

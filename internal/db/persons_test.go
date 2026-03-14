@@ -2,6 +2,7 @@ package db
 
 import (
 	"testing"
+	"time"
 )
 
 func TestPersonInsertAndList(t *testing.T) {
@@ -56,7 +57,7 @@ func TestPersonHistory(t *testing.T) {
 	acct, _ := AccountInsert(conn, "main", "bank")
 
 	// Add a transaction and link it
-	txn, _ := TransactionInsert(conn, acct.ID, nil, "expense", 100, "dinner")
+	txn, _ := TransactionInsert(conn, acct.ID, nil, "expense", 100, "dinner", time.Time{})
 	TransactionPersonLink(conn, txn.ID, p.ID, "split bill")
 
 	// Add a debt

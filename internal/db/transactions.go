@@ -11,7 +11,7 @@ import (
 
 // TransactionInsert creates a transaction and updates the account balance atomically.
 // For expenses, balance decreases; for income, balance increases.
-func TransactionInsert(conn *sql.DB, accountID int64, categoryID *int64, txnType string, amount float64, note string) (models.Transaction, error) {
+func TransactionInsert(conn *sql.DB, accountID int64, categoryID *int64, txnType string, amount float64, note string, date time.Time) (models.Transaction, error) {
 	var txn models.Transaction
 
 	tx, err := conn.Begin()
@@ -20,12 +20,23 @@ func TransactionInsert(conn *sql.DB, accountID int64, categoryID *int64, txnType
 	}
 	defer tx.Rollback()
 
-	err = tx.QueryRow(
-		`INSERT INTO transactions (account_id, category_id, type, amount, note)
-		 VALUES (?, ?, ?, ?, ?)
-		 RETURNING id, account_id, category_id, type, amount, note, date, created_at`,
-		accountID, categoryID, txnType, amount, note,
-	).Scan(&txn.ID, &txn.AccountID, &txn.CategoryID, &txn.Type, &txn.Amount, &txn.Note, &txn.Date, &txn.CreatedAt)
+	var row *sql.Row
+	if date.IsZero() {
+		row = tx.QueryRow(
+			`INSERT INTO transactions (account_id, category_id, type, amount, note)
+			 VALUES (?, ?, ?, ?, ?)
+			 RETURNING id, account_id, category_id, type, amount, note, date, created_at`,
+			accountID, categoryID, txnType, amount, note,
+		)
+	} else {
+		row = tx.QueryRow(
+			`INSERT INTO transactions (account_id, category_id, type, amount, note, date)
+			 VALUES (?, ?, ?, ?, ?, ?)
+			 RETURNING id, account_id, category_id, type, amount, note, date, created_at`,
+			accountID, categoryID, txnType, amount, note, date.Format("2006-01-02"),
+		)
+	}
+	err = row.Scan(&txn.ID, &txn.AccountID, &txn.CategoryID, &txn.Type, &txn.Amount, &txn.Note, &txn.Date, &txn.CreatedAt)
 	if err != nil {
 		return txn, fmt.Errorf("insert transaction: %w", err)
 	}

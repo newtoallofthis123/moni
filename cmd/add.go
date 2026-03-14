@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/newtoallofthis123/moni/internal/db"
 	"github.com/newtoallofthis123/moni/internal/format"
@@ -38,6 +39,16 @@ func runAddTransaction(txnType string) func(cmd *cobra.Command, args []string) e
 		catName, _ := cmd.Flags().GetString("cat")
 		note, _ := cmd.Flags().GetString("note")
 		acctName, _ := cmd.Flags().GetString("account")
+		dateStr, _ := cmd.Flags().GetString("date")
+
+		var date time.Time
+		if dateStr != "" {
+			parsed, err := time.Parse("2006-01-02", dateStr)
+			if err != nil {
+				return fmt.Errorf("invalid date %q (expected YYYY-MM-DD): %w", dateStr, err)
+			}
+			date = parsed
+		}
 
 		// Resolve account
 		var acct, acctErr = resolveAccount(acctName)
@@ -55,7 +66,7 @@ func runAddTransaction(txnType string) func(cmd *cobra.Command, args []string) e
 			catID = &cat.ID
 		}
 
-		txn, err := db.TransactionInsert(conn, acct.ID, catID, txnType, amount, note)
+		txn, err := db.TransactionInsert(conn, acct.ID, catID, txnType, amount, note, date)
 		if err != nil {
 			return err
 		}
@@ -105,5 +116,6 @@ func init() {
 		cmd.Flags().StringP("cat", "c", "", "Category name")
 		cmd.Flags().StringP("note", "n", "", "Transaction note/description")
 		cmd.Flags().StringP("account", "a", "", "Account name (defaults to first account)")
+		cmd.Flags().StringP("date", "d", "", "Transaction date (YYYY-MM-DD, defaults to today)")
 	}
 }

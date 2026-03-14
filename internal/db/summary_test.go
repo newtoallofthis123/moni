@@ -17,10 +17,10 @@ func TestSummaryForMonth(t *testing.T) {
 	transportID := transport.ID
 
 	// Add some transactions — these have today's date
-	TransactionInsert(conn, acct.ID, &salaryID, "income", 5000, "pay")
-	TransactionInsert(conn, acct.ID, &foodID, "expense", 200, "groceries")
-	TransactionInsert(conn, acct.ID, &foodID, "expense", 100, "restaurant")
-	TransactionInsert(conn, acct.ID, &transportID, "expense", 50, "bus")
+	TransactionInsert(conn, acct.ID, &salaryID, "income", 5000, "pay", time.Time{})
+	TransactionInsert(conn, acct.ID, &foodID, "expense", 200, "groceries", time.Time{})
+	TransactionInsert(conn, acct.ID, &foodID, "expense", 100, "restaurant", time.Time{})
+	TransactionInsert(conn, acct.ID, &transportID, "expense", 50, "bus", time.Time{})
 
 	now := time.Now()
 	month := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
